@@ -1,0 +1,26 @@
+.main {
+  width: 50%;
+  margin: 0 auto;
+  text-align: center;
+
+  &-content {
+    margin-top: 30px;
+
+    &__letters {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      min-height: 64px;
+    }
+  }
+}
+
+.letters__block {
+  &--default {
+    background-color: transparent;
+  }
+
+  &--error {
+    background-color: #ce2b2b;
+  }
+}

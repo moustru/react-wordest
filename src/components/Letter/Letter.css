@@ -1,0 +1,26 @@
+.letter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 32px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+
+  &--default {
+    background-color: #2323eb;
+  }
+
+  &--success {
+    background-color: #1ea740;
+  }
+
+  &--danger {
+    background-color: #ce2b2b;
+  }
+}
