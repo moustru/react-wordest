@@ -1,0 +1,14 @@
+.letters__block {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  min-height: 64px;
+
+  &--default {
+    background-color: transparent;
+  }
+
+  &--error {
+    background-color: #ce2b2b;
+  }
+}

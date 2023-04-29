@@ -1,13 +1,9 @@
-import type { LetterType } from "@/types/Word";
 import Letter from "../Letter/Letter";
+import { useAppSelector } from "@/store/hooks";
 import "./AnswerBlock.css";
 
-type AnswerBlockProps = {
-  answer: LetterType[];
-};
-
-export default function AnswerBlock(props: AnswerBlockProps) {
-  const { answer } = props;
+export default function AnswerBlock() {
+  const answer = useAppSelector((state) => state.answerState.answer);
 
   return (
     <div className="answer-block">

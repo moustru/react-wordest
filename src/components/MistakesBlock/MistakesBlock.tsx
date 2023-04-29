@@ -1,11 +1,11 @@
+import { useAppSelector } from "@/store/hooks";
 import "./MistakesBlock.css";
+import { selectCurrentWordObject } from "@/store/slices/wordsSlice";
 
-type MistakesBlockProps = {
-  mistakesCount: number;
-};
+export default function MistakesBlock() {
+  const currentWordMistakes = useAppSelector(
+    (state) => selectCurrentWordObject(state.wordsState).mistakes
+  );
 
-export default function MistakesBlock(props: MistakesBlockProps) {
-  const { mistakesCount } = props;
-
-  return <div className="mistakes-block">Mistakes: {mistakesCount}</div>;
+  return <div className="mistakes__block">Mistakes: {currentWordMistakes}</div>;
 }

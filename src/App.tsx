@@ -1,139 +1,117 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import Letter from "./components/Letter/Letter";
-import { setWordsArray } from "./helpers/words";
-import type { LetterType, WordObject } from "./types/Word";
-import { TRIGGERED_KEY_CODES } from "./helpers/constants";
+import type { LetterType } from "./types/Word";
 import AnswerBlock from "./components/AnswerBlock/AnswerBlock";
 import QuestionBlock from "./components/QuestionBlock/QuestionBlock";
 import MistakesBlock from "./components/MistakesBlock/MistakesBlock";
 
+import { useAppSelector, useAppDispatch } from "./store/hooks";
+import {
+  addLetterToAnswer,
+  resetAnswerState,
+} from "./store/slices/answerSlice";
+
+import {
+  checkEndOfWord,
+  guessLetter,
+  letterErrorKeydown,
+  nextWord,
+  selectCurrentWordObject,
+} from "./store/slices/wordsSlice";
+import { TRIGGERED_KEY_CODES } from "./helpers/constants";
+import LettersBlock from "./components/LettersBlock/LettersBlock";
+import { setTrainerBlockState } from "./store/slices/trainerSlice";
+
 function App() {
-  const randomWords = setWordsArray();
-
-  const [currentWord, setCurrentWord] = useState<number>(0);
-
-  const [word, setNewWordArray] = useState<WordObject>(
-    randomWords[currentWord]
-  );
-
-  const [answer, setAnswerState] = useState<LetterType[]>([]);
+  const dispatch = useAppDispatch();
 
   const [lettersBlockClass, setLettersBlockClass] = useState<string>(
     "letters__block--default"
   );
 
-  const [trainerVisible, setTrainerVisibleState] = useState<boolean>(true);
+  const currentWord = useAppSelector((state) =>
+    selectCurrentWordObject(state.wordsState)
+  );
 
-  function letterNext(selectedLetter: LetterType) {
-    setNewWordArray((wordState) => ({
-      ...wordState,
-      currentLetter: (wordState.currentLetter += 1),
-      shuffled: wordState.shuffled.filter(
-        (letter) => letter.id !== selectedLetter.id
-      ),
-    }));
+  const trainerBlockState = useAppSelector((state) => state);
 
-    setAnswerState([...answer, selectedLetter]);
-  }
+  // Answer dispatches
+  const addToAnswer = (letter: LetterType) =>
+    dispatch(addLetterToAnswer(letter));
 
-  function letterErrorClick(selectedLetter: LetterType) {
-    setNewWordArray((wordState) => ({
-      ...wordState,
-      mistakes: ++wordState.mistakes,
-      shuffled: wordState.shuffled.map((letter) => {
-        if (letter.id !== selectedLetter.id) return letter;
-        else
-          return {
-            ...letter,
-            bgClass: "letter--danger",
-          };
-      }),
-    }));
-  }
+  const resetAnswerStateAction = () => dispatch(resetAnswerState());
 
-  function letterErrorKeydown() {
-    setNewWordArray((wordState) => ({
-      ...wordState,
-      mistakes: ++wordState.mistakes,
-    }));
+  // Words dispatches
+  const guessLetterAction = (selectedLetter: LetterType) =>
+    dispatch(guessLetter(selectedLetter));
+
+  const nextWordAction = () => dispatch(nextWord());
+
+  const letterErrorKeydownAction = () => dispatch(letterErrorKeydown());
+
+  const checkEndOfWordEvent = () =>
+    dispatch(
+      checkEndOfWord({
+        right: () =>
+          setTimeout(() => {
+            setTrainerBlockStateAction(false);
+          }, 1000),
+        left: () =>
+          setTimeout(() => {
+            nextWordAction();
+            resetAnswerStateAction();
+          }, 1000),
+      })
+    );
+
+  // Trainer dispatches
+  const setTrainerBlockStateAction = (state: boolean) =>
+    dispatch(setTrainerBlockState(state));
+
+  function handleErrorKeydown() {
+    letterErrorKeydownAction();
 
     setLettersBlockClass("letters__block--error");
 
     setTimeout(() => setLettersBlockClass("letters__block--default"), 200);
   }
 
-  function nextLetter(selectedLetter: LetterType) {
-    const currentLetter = word.literal.charAt(word.currentLetter);
-
-    if (currentLetter === selectedLetter.literal) {
-      letterNext(selectedLetter);
-    } else {
-      letterErrorClick(selectedLetter);
-    }
-
-    handleEndOfWord();
-  }
-
-  function handleEndOfWord() {
-    if (word.literal.length === word.currentLetter + 1) {
-      if (currentWord === 5) {
-        setTrainerVisibleState(false);
-      } else {
-        setTimeout(() => {
-          setCurrentWord((currentWord) => (currentWord += 1));
-
-          setAnswerState([]);
-
-          setNewWordArray(randomWords[currentWord]);
-        }, 500);
-      }
-    }
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
+  function handleKeydownEvent(e: KeyboardEvent) {
     const [from, to] = TRIGGERED_KEY_CODES;
-    const currentLetter = word.literal.charAt(word.currentLetter);
+    const currentLetter = currentWord.literal.charAt(currentWord.currentLetter);
 
-    const relatedLetter = word.shuffled.find(
+    const relatedLetter = currentWord.shuffled.find(
       (letter) => letter.literal === e.key
     );
 
     if (e.keyCode >= from && e.keyCode <= to) {
       if (relatedLetter?.literal === currentLetter) {
-        letterNext(relatedLetter);
+        guessLetterAction(relatedLetter);
+        addToAnswer(relatedLetter);
       } else {
-        letterErrorKeydown();
+        handleErrorKeydown();
       }
     }
 
-    handleEndOfWord();
+    checkEndOfWordEvent();
   }
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("keydown", handleKeydownEvent);
 
-    return () => window.removeEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydownEvent);
   });
 
   return (
     <div className="main">
-      {trainerVisible ? (
+      {trainerBlockState ? (
         <>
           <h1>English Vocabulary Trainer</h1>
-          <QuestionBlock currentWord={currentWord} />
+          <QuestionBlock />
           <div className="main-content">
-            <AnswerBlock answer={answer} />
-            <div className={`main-content__letters ${lettersBlockClass}`}>
-              {word.shuffled.map((letter, i) => (
-                <Letter
-                  {...letter}
-                  key={i}
-                  letterClick={(l) => nextLetter(l)}
-                />
-              ))}
-            </div>
-            <MistakesBlock mistakesCount={word.mistakes} />
+            <AnswerBlock />
+            <LettersBlock lettersBlockClass={lettersBlockClass} />
+            <MistakesBlock />
           </div>
         </>
       ) : (

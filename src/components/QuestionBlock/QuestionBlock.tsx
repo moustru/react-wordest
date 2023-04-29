@@ -1,11 +1,12 @@
 import "./QuestionBlock.css";
+import { useAppSelector } from "@/store/hooks";
 
-type QuestionBlockProps = {
-  currentWord: number;
-};
+export default function QuestionBlock() {
+  const currentWordNumber = useAppSelector(
+    (state) => state.wordsState.currentWordNumber
+  );
 
-export default function QuestionBlock(props: QuestionBlockProps) {
-  const { currentWord } = props;
-
-  return <div className="question-block">Question {currentWord + 1} of 6</div>;
+  return (
+    <div className="question__block">Question {currentWordNumber + 1} of 6</div>
+  );
 }
